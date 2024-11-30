@@ -81,7 +81,7 @@ voice_assistant:
         green: 0%
         brightness: 100%
         effect: none
-on_tts_stop:
+  on_tts_stop:
     - homeassistant.service: 
         service: media_player.play_media
         data: 
