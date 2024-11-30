@@ -338,3 +338,6 @@ micro_wake_word:
   vad:
   models:
     - model: ${micro_wake_word_model}
+
+bluetooth_proxy:
+  active: true
