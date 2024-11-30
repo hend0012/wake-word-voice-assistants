@@ -81,13 +81,14 @@ voice_assistant:
         green: 0%
         brightness: 100%
         effect: none
-    - homeassistant.service: 
-        service: media_player.play_media
-        data: 
+    - homeassistant.service:
+        service: tts.cloud_say
+        data:
           entity_id: ${target_media_player}
-          media_content_id: !lambda 'return x';
-          media_content_type: music
-          announce: "true"
+        data_template:
+          message: "{{ my_stt }}"
+        variables:
+          my_stt: return x;
   on_end:
     - delay: 100ms
     - voice_assistant.stop:
