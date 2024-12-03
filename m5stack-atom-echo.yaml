@@ -45,19 +45,28 @@ microphone:
     pdm: true
 
 speaker:
-  - platform: i2s_audio
+  #- platform: i2s_audio
+  #  id: echo_speaker
+  #  i2s_dout_pin: GPIO22
+  #  dac_type: external
+  #  channel: mono
+  - homeassistant.service:
     id: echo_speaker
-    i2s_dout_pin: GPIO22
-    dac_type: external
-    channel: mono
+    service: tts.cloud_say
+    data:
+      entity_id: ${target_media_player}
+    data_template:
+      message: "{{ my_stt }}"
+    variables:
+      my_stt: return x;
 
 voice_assistant:
   id: va
   microphone: echo_microphone
-  #speaker: echo_speaker
+  speaker: echo_speaker
   noise_suppression_level: 2
   auto_gain: 31dBFS
-  volume_multiplier: 2.0
+  volume_multiplier: 3.0
   vad_threshold: 3
   on_listening:
     - light.turn_on:
@@ -81,14 +90,14 @@ voice_assistant:
         green: 0%
         brightness: 100%
         effect: none
-    - homeassistant.service:
-        service: tts.cloud_say
-        data:
-          entity_id: ${target_media_player}
-        data_template:
-          message: "{{ my_stt }}"
-        variables:
-          my_stt: return x;
+    #- homeassistant.service:
+    #    service: tts.cloud_say
+    #    data:
+    #      entity_id: ${target_media_player}
+    #    data_template:
+    #      message: "{{ my_stt }}"
+    #    variables:
+    #      my_stt: return x;
   on_end:
     - delay: 100ms
     - voice_assistant.stop:
