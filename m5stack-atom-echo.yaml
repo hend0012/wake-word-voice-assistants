@@ -49,7 +49,7 @@ voice_assistant:
   microphone: echo_microphone
   noise_suppression_level: 2
   auto_gain: 31dBFS
-  volume_multiplier: 2.0
+  volume_multiplier: 3.0
   vad_threshold: 3
   on_listening:
     - light.turn_on:
@@ -208,10 +208,6 @@ external_components:
     refresh: 0s
 
 esp_adf:
-
-file:
-  - id: timer_finished_wave_file
-    file: https://github.com/esphome/wake-word-voice-assistants/raw/main/sounds/timer_finished.wav
 
 micro_wake_word:
   on_wake_word_detected:
