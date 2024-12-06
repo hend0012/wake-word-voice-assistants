@@ -15,26 +15,15 @@ esp32:
   framework:
     type: esp-idf
 
-# Enable logging
 logger:
-
-# Enable Home Assistant API
 api:
-  encryption:
-    key: "IPauG+Apb7iiENgIXrFIPqLWPqcP21D/Pg8iJ1kyJ2A="
 
 ota:
   - platform: esphome
-    password: "24a2bd13849e80cfedcfe95a6fafa88a"
+    id: ota_esphome
 
 wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
-
-  # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
-    ssid: "Llm-Kitchen Fallback Hotspot"
-    password: "klUVPRL1zON1"
 
 captive_portal:
 
