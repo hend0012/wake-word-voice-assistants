@@ -221,6 +221,9 @@ script:
   - id: reset_led
     then:
       - light.turn_off: led
+  - id: stop_ringing
+    then:
+      - switch.turn_off: timer_ringing
 
 switch:
   - platform: template
@@ -234,14 +237,15 @@ switch:
     on_turn_off:
       - script.execute: reset_led
   - platform: template
-    id: timer_ringing
+    name: Stop timer ringing
+    id: stop_timer_ringing
     optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
     entity_category: config
-    internal: true
-    restore_mode: ALWAYS_OFF
     on_turn_on:
-      - delay: 15min
-      - switch.turn_off: timer_ringing
+      - switch.turn_on: timer_ringing
+    on_turn_off:
+      - script.execute: stop_ringing
       
 select:
   - platform: template
