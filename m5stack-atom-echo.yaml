@@ -227,16 +227,6 @@ script:
 
 switch:
   - platform: template
-    name: Use listen light
-    id: use_listen_light
-    optimistic: true
-    restore_mode: RESTORE_DEFAULT_ON
-    entity_category: config
-    on_turn_on:
-      - script.execute: reset_led
-    on_turn_off:
-      - script.execute: reset_led
-  - platform: template
     name: Stop timer ringing
     id: stop_timer_ringing
     optimistic: true
