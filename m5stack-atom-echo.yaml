@@ -1,7 +1,7 @@
 substitutions:
   name: m5stack-atom-echo
   friendly_name: M5Stack Atom Echo
-  micro_wake_word_model: hey_jarvis
+  micro_wake_word_model: hey_jarvis  # Supported wake words: alexa, hey_jarvis, hey_mycroft
   target_media_player: media_player.kitchen_display
 
 esphome:
@@ -49,7 +49,7 @@ voice_assistant:
   microphone: echo_microphone
   noise_suppression_level: 2
   auto_gain: 31dBFS
-  volume_multiplier: 3.0
+  volume_multiplier: 2.0
   vad_threshold: 3
   on_listening:
     - light.turn_on:
@@ -99,34 +99,97 @@ voice_assistant:
         else:
           - voice_assistant.start_continuous:
           - script.execute: reset_led
-  on_timer_finished:
-    - logger.log: "Timer finished, notifying Home Assistant."
-    - homeassistant.service:
-        service: input_boolean.turn_on
-        data:
-          entity_id: input_boolean.timer_finished
-        variables:
-          media_player: !lambda return "${target_media_player}";
+  on_error:
     - light.turn_on:
         id: led
         red: 100%
         green: 0%
         blue: 0%
         brightness: 100%
-        effect: "Fast Pulse"
-    - delay: 1s
-    - logger.log: "Resetting local timer state."
-    - switch.turn_off: timer_ringing
-    - light.turn_off: led
+        effect: none
+    - delay: 2s
+    - script.execute: reset_led
+  on_client_connected:
+    - delay: 2s  # Give the api server time to settle
     - if:
         condition:
           lambda: return id(wake_word_engine_location).state == "On device";
         then:
           - micro_wake_word.start:
-          - script.execute: reset_led
         else:
           - voice_assistant.start_continuous:
           - script.execute: reset_led
+  on_client_disconnected:
+    - voice_assistant.stop:
+    - micro_wake_word.stop:
+  on_timer_finished:
+    - switch.turn_on: timer_ringing
+    - light.turn_on:
+        id: led
+        red: 0%
+        green: 100%
+        blue: 0%
+        brightness: 100%
+        effect: "Fast Pulse"
+    - while:
+        condition:
+          switch.is_on: timer_ringing
+        then:
+          - homeassistant.service:
+              service: media_player.play_media
+              data:
+                entity_id: ${target_media_player}
+                media_content_id: "https://github.com/esphome/wake-word-voice-assistants/raw/main/sounds/timer_finished.wav"
+                media_content_type: "music"
+          - delay: 1s
+    - wait_until:
+        not:
+          switch.is_on: timer_ringing
+    - light.turn_off: led
+    - switch.turn_off: timer_ringing
+
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO39
+      inverted: true
+    name: Button
+    disabled_by_default: true
+    entity_category: diagnostic
+    id: echo_button
+    on_multi_click:
+      - timing:
+          - ON for at least 50ms
+          - OFF for at least 50ms
+        then:
+          - if:
+              condition:
+                switch.is_on: timer_ringing
+              then:
+                - switch.turn_off: timer_ringing
+              else:
+                - if:
+                    condition:
+                      lambda: return id(wake_word_engine_location).state == "On device";
+                    then:
+                      - voice_assistant.stop
+                      - micro_wake_word.stop:
+                      - delay: 1s
+                      - script.execute: reset_led
+                      - script.wait: reset_led
+                      - micro_wake_word.start:
+                    else:
+                      - if:
+                          condition: voice_assistant.is_running
+                          then:
+                            - voice_assistant.stop:
+                            - script.execute: reset_led
+                      - voice_assistant.start_continuous:
+      - timing:
+          - ON for at least 10s
+        then:
+          - button.press: factory_reset_btn
 
 light:
   - platform: esp32_rmt_led_strip
@@ -161,14 +224,26 @@ script:
 
 switch:
   - platform: template
+    name: Use listen light
+    id: use_listen_light
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    entity_category: config
+    on_turn_on:
+      - script.execute: reset_led
+    on_turn_off:
+      - script.execute: reset_led
+  - platform: template
+    name: timer_ringing
     id: timer_ringing
     optimistic: true
-    internal: true
-    restore_mode: ALWAYS_OFF
+    restore_mode: RESTORE_DEFAULT_ON
+    entity_category: config
     on_turn_on:
-      - delay: 15min
+      - switch.turn_on: timer_ringing
+    on_turn_off:
       - switch.turn_off: timer_ringing
-
+      
 select:
   - platform: template
     entity_category: config
@@ -208,6 +283,10 @@ external_components:
     refresh: 0s
 
 esp_adf:
+
+file:
+  - id: timer_finished_wave_file
+    file: https://github.com/esphome/wake-word-voice-assistants/raw/main/sounds/timer_finished.wav
 
 micro_wake_word:
   on_wake_word_detected:
