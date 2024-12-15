@@ -47,7 +47,7 @@ microphone:
 voice_assistant:
   id: va
   microphone: echo_microphone
-  noise_suppression_level: 2
+  noise_suppression_level: 4
   auto_gain: 31dBFS
   volume_multiplier: 2.0
   vad_threshold: 3
